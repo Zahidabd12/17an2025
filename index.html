@@ -58,12 +58,12 @@
                     <label for="password" class="text-sm font-medium text-gray-700">Password</label>
                     <input id="password" name="password" type="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="••••••••">
                 </div>
-                <!-- <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-md">
+                 <!--<div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-md">
                     <p class="font-semibold text-gray-600">Akun untuk testing:</p>
                     <p><strong>Username:</strong> panitia | <strong>Password:</strong> 17anMerdeka2025</p>
                     <p><strong>Username:</strong> sekretaris | <strong>Password:</strong> aman</p>
                     <p><strong>Username:</strong> bendahara | <strong>Password:</strong> uang</p>
-                </div> -->
+                </div>-->
                 <p id="login-error" class="text-sm text-red-600 hidden">Username atau password salah.</p>
                 <button type="submit" class="w-full py-2 px-4 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Login
@@ -276,9 +276,9 @@
                                     <label for="surat-tujuan" class="text-sm font-medium text-gray-700">Ditujukan Kepada</label>
                                     <input type="text" id="surat-tujuan" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Nama perusahaan/tamu">
                                 </div>
-                                <div>
-                                    <label for="surat-nomor" class="text-sm font-medium text-gray-700">Nomor Surat</label>
-                                    <input type="text" id="surat-nomor" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="01/UND/PAN-17/VII/2025">
+                                <div class="lg:col-span-2">
+                                    <label for="surat-nomor" class="text-sm font-medium text-gray-700">Nomor Surat (Otomatis)</label>
+                                    <input type="text" id="surat-nomor" required readonly class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed">
                                 </div>
                                 <div>
                                     <label for="surat-tanggal" class="text-sm font-medium text-gray-700">Tanggal</label>
@@ -419,9 +419,9 @@
         ];
 
         const initialLettersData = [
-            { id: "let001", type: "Proposal", letter_number: "01/PROP/PAN-17/VII/2025", destination: "Kantor Kelurahan", date: "2025-07-10", status: "Diterima", createdBy: "Citra Lestari" },
-            { id: "let002", type: "Proposal", letter_number: "02/PROP/PAN-17/VII/2025", destination: "CV. Sumber Rezeki", date: "2025-07-11", status: "Sudah Cair", createdBy: "Citra Lestari" },
-            { id: "let003", type: "Undangan", letter_number: "01/UND/PAN-17/VII/2025", destination: "Bapak Ketua RW 05", date: "2025-07-20", status: "Terkirim", createdBy: "Citra Lestari" }
+            { id: "let001", type: "Proposal", letter_number: "001/PROP/PAN-17/VII/2025", destination: "Kantor Kelurahan", date: "2025-07-10", status: "Diterima", createdBy: "Citra Lestari" },
+            { id: "let002", type: "Proposal", letter_number: "002/PROP/PAN-17/VII/2025", destination: "CV. Sumber Rezeki", date: "2025-07-11", status: "Sudah Cair", createdBy: "Citra Lestari" },
+            { id: "let003", type: "Undangan", letter_number: "001/UND/PAN-17/VII/2025", destination: "Bapak Ketua RW 05", date: "2025-07-20", status: "Terkirim", createdBy: "Citra Lestari" }
         ];
 
         const initialTasksData = [
@@ -497,12 +497,16 @@
             }
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             document.getElementById(`nav-${viewName}`).classList.add('active');
+            
+            if (viewName === 'surat') {
+                generateLetterNumber(); // Generate number when surat view is shown
+            }
         }
 
         function showApp() {
             loginView.classList.add('hidden');
             appView.classList.remove('hidden');
-            document.getElementById('current-user-display').textContent = sessionStorage.getItem('currentUser');
+            document.getElementById('current-user-display').textContent = localStorage.getItem('currentUser');
             renderAll();
             showView('dashboard');
         }
@@ -510,7 +514,7 @@
         function showLogin() {
             appView.classList.add('hidden');
             loginView.classList.remove('hidden');
-            sessionStorage.removeItem('currentUser');
+            localStorage.removeItem('currentUser');
         }
 
         // --- RENDER FUNCTIONS ---
@@ -644,7 +648,7 @@
         }
 
         function renderDrafts() {
-            const currentUser = sessionStorage.getItem('currentUser');
+            const currentUser = localStorage.getItem('currentUser');
             const uploadContainer = document.getElementById('upload-form-container');
             
             // Only show upload form to Sekretaris
@@ -716,13 +720,49 @@
             });
         }
 
+        // --- HELPER FUNCTIONS ---
+        function toRoman(num) {
+            const roman = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
+            let str = '';
+            for (let i of Object.keys(roman)) {
+                let q = Math.floor(num / roman[i]);
+                num -= q * roman[i];
+                str += i.repeat(q);
+            }
+            return str;
+        }
+
+        function generateLetterNumber() {
+            const type = document.getElementById('surat-jenis').value;
+            const letters = getData('letters');
+            const typeCode = type === 'Proposal' ? 'PROP' : 'UND';
+            
+            const sameTypeLetters = letters.filter(l => l.type === type);
+            const lastNumber = sameTypeLetters.reduce((max, l) => {
+                const numPart = parseInt(l.letter_number.split('/')[0], 10);
+                return numPart > max ? numPart : max;
+            }, 0);
+
+            const nextNumber = String(lastNumber + 1).padStart(3, '0');
+            
+            const date = new Date();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            const romanMonth = toRoman(month);
+
+            const newLetterNumber = `${nextNumber}/${typeCode}/PAN-17/${romanMonth}/${year}`;
+            
+            document.getElementById('surat-nomor').value = newLetterNumber;
+        }
+
+
         // --- EVENT LISTENERS ---
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const users = getData('users');
             const user = users.find(u => u.username === e.target.username.value && u.password === e.target.password.value);
             if (user) {
-                sessionStorage.setItem('currentUser', user.name);
+                localStorage.setItem('currentUser', user.name);
                 showApp();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
@@ -753,7 +793,7 @@
         document.getElementById('pemasukan-form').addEventListener('submit', e => {
             e.preventDefault();
             const transactions = getData('transactions');
-            transactions.push({ id: 'trx' + Date.now(), type: 'masuk', category: e.target.elements['pemasukan-jenis'].value, name: e.target.elements['pemasukan-nama'].value, amount: parseInt(e.target.elements['pemasukan-jumlah'].value), date: e.target.elements['pemasukan-tanggal'].value, createdBy: sessionStorage.getItem('currentUser') });
+            transactions.push({ id: 'trx' + Date.now(), type: 'masuk', category: e.target.elements['pemasukan-jenis'].value, name: e.target.elements['pemasukan-nama'].value, amount: parseInt(e.target.elements['pemasukan-jumlah'].value), date: e.target.elements['pemasukan-tanggal'].value, createdBy: localStorage.getItem('currentUser') });
             saveData('transactions', transactions);
             renderAnggaran();
             renderDashboard();
@@ -763,13 +803,15 @@
         document.getElementById('pengeluaran-form').addEventListener('submit', e => {
             e.preventDefault();
             const transactions = getData('transactions');
-            transactions.push({ id: 'trx' + Date.now(), type: 'keluar', name: e.target.elements['pengeluaran-nama'].value, amount: parseInt(e.target.elements['pengeluaran-jumlah'].value), date: e.target.elements['pengeluaran-tanggal'].value, ref_number: e.target.elements['pengeluaran-ref'].value, createdBy: sessionStorage.getItem('currentUser') });
+            transactions.push({ id: 'trx' + Date.now(), type: 'keluar', name: e.target.elements['pengeluaran-nama'].value, amount: parseInt(e.target.elements['pengeluaran-jumlah'].value), date: e.target.elements['pengeluaran-tanggal'].value, ref_number: e.target.elements['pengeluaran-ref'].value, createdBy: localStorage.getItem('currentUser') });
             saveData('transactions', transactions);
             renderAnggaran();
             renderDashboard();
             e.target.reset();
         });
         
+        document.getElementById('surat-jenis').addEventListener('change', generateLetterNumber);
+
         document.getElementById('surat-form').addEventListener('submit', e => {
             e.preventDefault();
             const letters = getData('letters');
@@ -781,18 +823,19 @@
                 destination: e.target.elements['surat-tujuan'].value,
                 date: e.target.elements['surat-tanggal'].value,
                 status: type === 'Proposal' ? 'Pengecekan' : 'Terkirim',
-                createdBy: sessionStorage.getItem('currentUser')
+                createdBy: localStorage.getItem('currentUser')
             });
             saveData('letters', letters);
             renderSurat();
             renderDashboard();
             e.target.reset();
+            generateLetterNumber(); // Regenerate for the next entry
         });
         
         document.getElementById('tugas-form').addEventListener('submit', e => {
             e.preventDefault();
             const tasks = getData('tasks');
-            tasks.push({ id: 'task' + Date.now(), name: e.target.elements['tugas-nama'].value, pic: e.target.elements['tugas-pic'].value, due_date: e.target.elements['tugas-target'].value, status: 'Belum Mulai', createdBy: sessionStorage.getItem('currentUser') });
+            tasks.push({ id: 'task' + Date.now(), name: e.target.elements['tugas-nama'].value, pic: e.target.elements['tugas-pic'].value, due_date: e.target.elements['tugas-target'].value, status: 'Belum Mulai', createdBy: localStorage.getItem('currentUser') });
             saveData('tasks', tasks);
             renderTugas();
             renderDashboard();
@@ -814,7 +857,7 @@
                         filename: file.name,
                         filetype: file.type,
                         uploadDate: new Date().toISOString().split('T')[0],
-                        uploadedBy: sessionStorage.getItem('currentUser'),
+                        uploadedBy: localStorage.getItem('currentUser'),
                         dataUrl: event.target.result
                     };
                     drafts.push(newDraft);
@@ -924,7 +967,7 @@
         // --- INITIAL LOAD ---
         document.addEventListener('DOMContentLoaded', () => {
             initializeData();
-            if (sessionStorage.getItem('currentUser')) {
+            if (localStorage.getItem('currentUser')) {
                  showApp();
             } else {
                  showLogin();
