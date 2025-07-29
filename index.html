@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Panitia 17 Agustus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ and Edge */
+            user-select: none; /* Standard syntax */
+        }
+        .sidebar-link {
+            transition: all 0.2s ease-in-out;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        /* Status Surat */
+        .status-pengecekan, .status-terkirim { background-color: #fef9c3; color: #ca8a04; }
+        .status-diterima { background-color: #dcfce7; color: #16a34a; }
+        .status-ditolak { background-color: #fee2e2; color: #dc2626; }
+        .status-sudah-cair { background-color: #cffafe; color: #0891b2; }
+        
+        /* Status Tugas */
+        .status-belum-mulai { background-color: #e5e7eb; color: #4b5563; }
+        .status-dalam-proses { background-color: #dbeafe; color: #2563eb; }
+        .status-selesai { background-color: #dcfce7; color: #16a34a; }
+        .task-selesai { text-decoration: line-through; color: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Halaman Login -->
+    <div id="login-view" class="flex items-center justify-center min-h-screen p-4">
+        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+            <div class="text-center">
+                 <h1 class="text-2xl font-bold text-gray-800">Login Panitia</h1>
+                 <p class="text-sm text-gray-500 mt-1">Selamat Datang!</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="text-sm font-medium text-gray-700">Username</label>
+                    <input id="username" name="username" type="text" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="panitia">
+                </div>
+                <div>
+                    <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="••••••••">
+                </div>
+                <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-md">
+                    <p class="font-semibold text-gray-600">Akun untuk testing:</p>
+                    <p><strong>Username:</strong> panitia | <strong>Password:</strong> 17anMerdeka2025</p>
+                    <p><strong>Username:</strong> sekretaris | <strong>Password:</strong> aman</p>
+                    <p><strong>Username:</strong> bendahara | <strong>Password:</strong> uang</p>
+                </div>
+                <p id="login-error" class="text-sm text-red-600 hidden">Username atau password salah.</p>
+                <button type="submit" class="w-full py-2 px-4 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tampilan Aplikasi Utama (setelah login) -->
+    <div id="app-view" class="hidden">
+        <div class="relative min-h-screen md:flex">
+            <!-- Sidebar -->
+            <div id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 px-4 py-6 overflow-y-auto text-white bg-gray-800 shadow-lg md:relative md:translate-x-0 transform -translate-x-full transition-transform duration-200 ease-in-out">
+                <div class="flex items-center justify-between px-2">
+                    <h2 class="text-2xl font-bold">Dashboard 17an</h2>
+                </div>
+                <div class="px-2 mt-6">
+                    <p class="text-xs text-gray-400">LOGIN SEBAGAI</p>
+                    <p id="current-user-display" class="font-semibold text-white"></p>
+                </div>
+                <nav class="mt-4">
+                    <a href="#" id="nav-dashboard" class="sidebar-link flex items-center mt-4 py-2 px-6 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        <span class="mx-3">Dashboard</span>
+                    </a>
+                    <a href="#" id="nav-anggaran" class="sidebar-link flex items-center mt-4 py-2 px-6 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span class="mx-3">Anggaran</span>
+                    </a>
+                    <a href="#" id="nav-surat" class="sidebar-link flex items-center mt-4 py-2 px-6 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span class="mx-3">Manajemen Surat</span>
+                    </a>
+                    <a href="#" id="nav-tugas" class="sidebar-link flex items-center mt-4 py-2 px-6 rounded-lg">
+                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        <span class="mx-3">Tugas</span>
+                    </a>
+                    <a href="#" id="nav-draft" class="sidebar-link flex items-center mt-4 py-2 px-6 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="mx-3">Draft Dokumen</span>
+                    </a>
+                    <a href="#" id="nav-tim" class="sidebar-link flex items-center mt-4 py-2 px-6 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283-.356-1.857M12 12a3 3 0 100-6 3 3 0 000 6z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12a3 3 0 100-6 3 3 0 000 6zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        <span class="mx-3">Tim Panitia</span>
+                    </a>
+                    <a href="#" id="logout-button" class="sidebar-link flex items-center mt-10 py-2 px-6 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        <span class="mx-3">Logout</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- Konten Utama -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Header Mobile -->
+                <header class="flex items-center justify-between p-4 bg-white border-b md:hidden">
+                    <h2 class="text-xl font-bold text-gray-800">Dashboard 17an</h2>
+                    <button id="mobile-menu-button" class="text-gray-500 focus:outline-none focus:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </header>
+
+                <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+                    <!-- Konten Dashboard -->
+                    <div id="dashboard-content">
+                        <h1 class="text-3xl font-bold text-gray-800">Dashboard Ringkasan</h1>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                            <!-- Kartu Saldo -->
+                            <div class="bg-white p-6 rounded-xl shadow-md">
+                                <h3 class="font-semibold text-lg text-gray-700">Saldo Anggaran</h3>
+                                <p class="text-sm text-gray-500">Pemasukan - Pengeluaran</p>
+                                <p id="saldo-akhir" class="text-3xl font-bold text-green-600 mt-4">Rp 0</p>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex justify-between"><span class="text-gray-600">Total Pemasukan:</span> <span id="total-pemasukan" class="font-medium text-blue-600">Rp 0</span></div>
+                                    <div class="flex justify-between"><span class="text-gray-600">Total Pengeluaran:</span> <span id="total-pengeluaran" class="font-medium text-red-600">Rp 0</span></div>
+                                </div>
+                            </div>
+                            <!-- Kartu Surat -->
+                            <div class="bg-white p-6 rounded-xl shadow-md">
+                                <h3 class="font-semibold text-lg text-gray-700">Progres Surat</h3>
+                                <p class="text-sm text-gray-500">Status proposal & undangan</p>
+                                <p id="surat-total" class="text-3xl font-bold text-indigo-600 mt-4">0 Surat</p>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex justify-between"><span class="text-gray-600">Proposal Diterima:</span> <span id="surat-diterima" class="font-medium text-green-600">0</span></div>
+                                    <div class="flex justify-between"><span class="text-gray-600">Menunggu Respon:</span> <span id="surat-menunggu" class="font-medium text-yellow-600">0</span></div>
+                                </div>
+                            </div>
+                            <!-- Kartu Tugas -->
+                            <div class="bg-white p-6 rounded-xl shadow-md">
+                                <h3 class="font-semibold text-lg text-gray-700">Progres Tugas</h3>
+                                <p class="text-sm text-gray-500">Penyelesaian agenda panitia</p>
+                                <p id="tugas-total" class="text-3xl font-bold text-teal-600 mt-4">0 Tugas</p>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex justify-between"><span class="text-gray-600">Selesai:</span> <span id="tugas-selesai" class="font-medium text-green-600">0</span></div>
+                                    <div class="flex justify-between"><span class="text-gray-600">Dalam Proses:</span> <span id="tugas-proses" class="font-medium text-blue-600">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Timeline Kegiatan -->
+                        <div class="mt-8 bg-white p-6 rounded-xl shadow-md">
+                            <h3 class="font-semibold text-lg text-gray-700 mb-4">Timeline Kegiatan Terdekat</h3>
+                            <div id="timeline-container" class="space-y-4">
+                                <!-- Timeline items will be injected here by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Konten Anggaran -->
+                    <div id="anggaran-content" class="hidden">
+                        <h1 class="text-3xl font-bold text-gray-800">Manajemen Anggaran</h1>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+                            <!-- Kolom Pemasukan -->
+                            <div>
+                                <div class="bg-white p-6 rounded-xl shadow-md">
+                                    <h3 class="font-semibold text-lg text-gray-700 mb-4">Tambah Pemasukan</h3>
+                                    <form id="pemasukan-form" class="space-y-4">
+                                        <div>
+                                            <label for="pemasukan-jenis" class="text-sm font-medium text-gray-700">Jenis Pemasukan</label>
+                                            <select id="pemasukan-jenis" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                                                <option>Sponsor</option>
+                                                <option>Donasi</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="pemasukan-nama" class="text-sm font-medium text-gray-700">Atas Nama</label>
+                                            <input type="text" id="pemasukan-nama" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Nama sponsor/donatur">
+                                        </div>
+                                        <div>
+                                            <label for="pemasukan-jumlah" class="text-sm font-medium text-gray-700">Jumlah (Rp)</label>
+                                            <input type="number" id="pemasukan-jumlah" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="500000">
+                                        </div>
+                                        <div>
+                                            <label for="pemasukan-tanggal" class="text-sm font-medium text-gray-700">Tanggal</label>
+                                            <input type="date" id="pemasukan-tanggal" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                                        </div>
+                                        <button type="submit" class="w-full py-2 px-4 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Simpan Pemasukan</button>
+                                    </form>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow-md mt-6">
+                                    <h3 class="font-semibold text-lg text-gray-700 mb-4">Daftar Pemasukan</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-sm text-left text-gray-500">
+                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                                <tr><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Atas Nama</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3">Oleh</th></tr>
+                                            </thead>
+                                            <tbody id="pemasukan-table-body"></tbody>
+                                            <tfoot>
+                                                <tr class="font-semibold text-gray-900"><th class="px-4 py-3 text-base" colspan="4">Total</th><td id="pemasukan-total-display" class="px-4 py-3 text-right">Rp 0</td></tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Kolom Pengeluaran -->
+                            <div>
+                                <div class="bg-white p-6 rounded-xl shadow-md">
+                                    <h3 class="font-semibold text-lg text-gray-700 mb-4">Tambah Pengeluaran</h3>
+                                    <form id="pengeluaran-form" class="space-y-4">
+                                        <div>
+                                            <label for="pengeluaran-nama" class="text-sm font-medium text-gray-700">Nama Barang/Keperluan</label>
+                                            <input type="text" id="pengeluaran-nama" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Beli cat, sewa panggung">
+                                        </div>
+                                        <div>
+                                            <label for="pengeluaran-jumlah" class="text-sm font-medium text-gray-700">Jumlah (Rp)</label>
+                                            <input type="number" id="pengeluaran-jumlah" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="150000">
+                                        </div>
+                                        <div>
+                                            <label for="pengeluaran-tanggal" class="text-sm font-medium text-gray-700">Tanggal</label>
+                                            <input type="date" id="pengeluaran-tanggal" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                                        </div>
+                                        <div>
+                                            <label for="pengeluaran-ref" class="text-sm font-medium text-gray-700">No. Surat/Kuitansi (Opsional)</label>
+                                            <input type="text" id="pengeluaran-ref" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                                        </div>
+                                        <button type="submit" class="w-full py-2 px-4 text-sm font-semibold text-white bg-red-600 rounded-md hover:bg-red-700">Simpan Pengeluaran</button>
+                                    </form>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow-md mt-6">
+                                    <h3 class="font-semibold text-lg text-gray-700 mb-4">Daftar Pengeluaran</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-sm text-left text-gray-500">
+                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                                <tr><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Keperluan</th><th class="px-4 py-3">Ref</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3">Oleh</th></tr>
+                                            </thead>
+                                            <tbody id="pengeluaran-table-body"></tbody>
+                                            <tfoot>
+                                                <tr class="font-semibold text-gray-900"><th class="px-4 py-3 text-base" colspan="4">Total</th><td id="pengeluaran-total-display" class="px-4 py-3 text-right">Rp 0</td></tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Konten Surat -->
+                    <div id="surat-content" class="hidden">
+                        <h1 class="text-3xl font-bold text-gray-800">Manajemen Surat</h1>
+                        <div class="bg-white p-6 rounded-xl shadow-md mt-6">
+                            <h3 class="font-semibold text-lg text-gray-700 mb-4">Buat Surat Baru</h3>
+                            <form id="surat-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                                <div>
+                                    <label for="surat-jenis" class="text-sm font-medium text-gray-700">Jenis Surat</label>
+                                    <select id="surat-jenis" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                                        <option>Proposal</option>
+                                        <option>Undangan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="surat-tujuan" class="text-sm font-medium text-gray-700">Ditujukan Kepada</label>
+                                    <input type="text" id="surat-tujuan" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Nama perusahaan/tamu">
+                                </div>
+                                <div>
+                                    <label for="surat-nomor" class="text-sm font-medium text-gray-700">Nomor Surat</label>
+                                    <input type="text" id="surat-nomor" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="01/UND/PAN-17/VII/2025">
+                                </div>
+                                <div>
+                                    <label for="surat-tanggal" class="text-sm font-medium text-gray-700">Tanggal</label>
+                                    <input type="date" id="surat-tanggal" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                                </div>
+                                <button type="submit" class="lg:col-start-4 w-full py-2 px-4 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Simpan Surat</button>
+                            </form>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md mt-6">
+                            <h3 class="font-semibold text-lg text-gray-700 mb-4">Daftar Surat Keluar</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left text-gray-500">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                        <tr><th class="px-4 py-3">No. Surat</th><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Tujuan</th><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3 text-center">Status</th><th class="px-4 py-3">Oleh</th></tr>
+                                    </thead>
+                                    <tbody id="surat-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Konten Tugas -->
+                    <div id="tugas-content" class="hidden">
+                        <h1 class="text-3xl font-bold text-gray-800">Progres Tugas Panitia</h1>
+                        <div class="bg-white p-6 rounded-xl shadow-md mt-6">
+                            <h3 class="font-semibold text-lg text-gray-700 mb-4">Tambah Tugas Baru</h3>
+                            <form id="tugas-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <div class="md:col-span-2">
+                                    <label for="tugas-nama" class="text-sm font-medium text-gray-700">Nama Tugas/Kegiatan</label>
+                                    <input type="text" id="tugas-nama" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Pemasangan umbul-umbul">
+                                </div>
+                                <div>
+                                    <label for="tugas-pic" class="text-sm font-medium text-gray-700">Penanggung Jawab (PIC)</label>
+                                    <input type="text" id="tugas-pic" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Seksi Perlengkapan">
+                                </div>
+                                <div>
+                                    <label for="tugas-target" class="text-sm font-medium text-gray-700">Target Selesai</label>
+                                    <input type="date" id="tugas-target" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                                </div>
+                                <button type="submit" class="md:col-start-4 w-full py-2 px-4 text-sm font-semibold text-white bg-teal-600 rounded-md hover:bg-teal-700">Simpan Tugas</button>
+                            </form>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md mt-6">
+                            <h3 class="font-semibold text-lg text-gray-700 mb-4">Daftar Tugas</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left text-gray-500">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                        <tr><th class="px-4 py-3">Nama Tugas</th><th class="px-4 py-3">PIC</th><th class="px-4 py-3">Target</th><th class="px-4 py-3 text-center">Status</th><th class="px-4 py-3">Oleh</th></tr>
+                                    </thead>
+                                    <tbody id="tugas-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Konten Draft Dokumen -->
+                    <div id="draft-content" class="hidden">
+                        <h1 class="text-3xl font-bold text-gray-800">Draft Dokumen</h1>
+                        
+                        <!-- Upload Form (Sekretaris Only) -->
+                        <div id="upload-form-container" class="bg-white p-6 rounded-xl shadow-md mt-6 hidden">
+                            <h3 class="font-semibold text-lg text-gray-700 mb-4">Unggah Draft Baru</h3>
+                            <form id="draft-form" class="space-y-4">
+                                <div>
+                                    <label for="draft-file" class="text-sm font-medium text-gray-700">Pilih File</label>
+                                    <input type="file" id="draft-file" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                                </div>
+                                <p id="upload-status" class="text-sm text-green-600"></p>
+                                <button type="submit" class="w-full py-2 px-4 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Unggah Dokumen</button>
+                            </form>
+                        </div>
+
+                        <!-- Daftar Dokumen -->
+                        <div class="bg-white p-6 rounded-xl shadow-md mt-6">
+                            <h3 class="font-semibold text-lg text-gray-700 mb-4">Daftar Dokumen Tersedia</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left text-gray-500">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3">Nama File</th>
+                                            <th class="px-4 py-3">Tanggal Unggah</th>
+                                            <th class="px-4 py-3">Diupload Oleh</th>
+                                            <th class="px-4 py-3 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="draft-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Konten Tim Panitia -->
+                    <div id="tim-content" class="hidden">
+                        <h1 class="text-3xl font-bold text-gray-800">Tim Panitia 17an 2025</h1>
+                        <div id="team-container" class="mt-6">
+                            <!-- Team members will be injected here by JS -->
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk Update Status -->
+    <div id="status-modal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-bold text-gray-800" id="modal-title">Ubah Status</h3>
+            <div class="mt-4">
+                <label for="modal-status-select" class="text-sm font-medium text-gray-700">Status Baru</label>
+                <select id="modal-status-select" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"></select>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="modal-cancel-button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Batal</button>
+                <button id="modal-save-button" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // ===================================================================================
+        // DATA LAYER - SIMULASI FILE JSON TERPISAH
+        // Data awal untuk aplikasi. Dalam production, ini idealnya diambil dari server.
+        // ===================================================================================
+
+        const initialUsersData = [
+            { username: "panitia", password: "17anMerdeka2025", name: "Budi Santoso" },
+            { username: "sekretaris", password: "aman", name: "Citra Lestari" },
+            { username: "bendahara", password: "uang", name: "Agus Wijaya" }
+        ];
+
+        const initialTransactionsData = [
+            { id: "trx001", type: "masuk", category: "Sponsor", name: "PT. Maju Mundur", amount: 2000000, date: "2025-07-15", createdBy: "Agus Wijaya" },
+            { id: "trx002", type: "keluar", name: "Beli Cat untuk Gapura", amount: 350000, date: "2025-07-16", ref_number: "KWT-001", createdBy: "Agus Wijaya" }
+        ];
+
+        const initialLettersData = [
+            { id: "let001", type: "Proposal", letter_number: "01/PROP/PAN-17/VII/2025", destination: "Kantor Kelurahan", date: "2025-07-10", status: "Diterima", createdBy: "Citra Lestari" },
+            { id: "let002", type: "Proposal", letter_number: "02/PROP/PAN-17/VII/2025", destination: "CV. Sumber Rezeki", date: "2025-07-11", status: "Sudah Cair", createdBy: "Citra Lestari" },
+            { id: "let003", type: "Undangan", letter_number: "01/UND/PAN-17/VII/2025", destination: "Bapak Ketua RW 05", date: "2025-07-20", status: "Terkirim", createdBy: "Citra Lestari" }
+        ];
+
+        const initialTasksData = [
+            { id: "task001", name: "Menyebar Undangan Lomba Anak", pic: "Seksi Acara", due_date: "2025-08-01", status: "Selesai", createdBy: "Budi Santoso" },
+            { id: "task002", name: "Booking Sound System", pic: "Seksi Perlengkapan", due_date: "2025-07-30", status: "Dalam Proses", createdBy: "Budi Santoso" },
+            { id: "task003", name: "Rapat Final Panitia", pic: "Ketua Panitia", due_date: "2025-08-10", status: "Belum Mulai", createdBy: "Budi Santoso" },
+            { id: "task004", name: "Persiapan Lapangan", pic: "Seksi Perlengkapan", due_date: "2025-08-16", status: "Belum Mulai", createdBy: "Budi Santoso" }
+        ];
+
+        const initialTeamData = [
+            { id: "team01", name: "Budi Santoso", role: "Ketua Pelaksana", division: "Inti", imageUrl: "https://placehold.co/400x400/6366f1/ffffff?text=BS" },
+            { id: "team02", name: "Citra Lestari", role: "Sekretaris", division: "Inti", imageUrl: "https://placehold.co/400x400/ec4899/ffffff?text=CL" },
+            { id: "team03", name: "Agus Wijaya", role: "Bendahara", division: "Inti", imageUrl: "https://placehold.co/400x400/84cc16/ffffff?text=AW" },
+            { id: "team04", name: "Dewi Anggraini", role: "Koordinator", division: "Seksi Acara", imageUrl: "https://placehold.co/400x400/f97316/ffffff?text=DA" },
+            { id: "team05", name: "Eko Prasetyo", role: "Anggota", division: "Seksi Acara", imageUrl: "https://placehold.co/400x400/f97316/ffffff?text=EP" },
+            { id: "team06", name: "Fitriani", role: "Koordinator", division: "Seksi Konsumsi", imageUrl: "https://placehold.co/400x400/14b8a6/ffffff?text=F" },
+            { id: "team07", name: "Gunawan", role: "Koordinator", division: "Seksi Perlengkapan", imageUrl: "https://placehold.co/400x400/a855f7/ffffff?text=G" },
+        ];
+
+        // ===================================================================================
+        // APPLICATION LOGIC
+        // ===================================================================================
+
+        function initializeData() {
+            if (!localStorage.getItem('users')) {
+                localStorage.setItem('users', JSON.stringify(initialUsersData));
+            }
+            if (!localStorage.getItem('transactions')) {
+                localStorage.setItem('transactions', JSON.stringify(initialTransactionsData));
+            }
+            if (!localStorage.getItem('letters')) {
+                localStorage.setItem('letters', JSON.stringify(initialLettersData));
+            }
+            if (!localStorage.getItem('tasks')) {
+                localStorage.setItem('tasks', JSON.stringify(initialTasksData));
+            }
+            if (!localStorage.getItem('team')) {
+                localStorage.setItem('team', JSON.stringify(initialTeamData));
+            }
+             if (!localStorage.getItem('drafts')) {
+                localStorage.setItem('drafts', JSON.stringify([]));
+            }
+        }
+
+        function getData(key) {
+            return JSON.parse(localStorage.getItem(key)) || [];
+        }
+
+        function saveData(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+        
+        const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+
+        // --- UI & VIEW MANAGEMENT ---
+        const loginView = document.getElementById('login-view');
+        const appView = document.getElementById('app-view');
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const contentDivs = {
+            dashboard: document.getElementById('dashboard-content'),
+            anggaran: document.getElementById('anggaran-content'),
+            surat: document.getElementById('surat-content'),
+            tugas: document.getElementById('tugas-content'),
+            draft: document.getElementById('draft-content'),
+            tim: document.getElementById('tim-content'),
+        };
+
+        function showView(viewName) {
+            Object.values(contentDivs).forEach(div => div.classList.add('hidden'));
+            if (contentDivs[viewName]) {
+                contentDivs[viewName].classList.remove('hidden');
+            }
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            document.getElementById(`nav-${viewName}`).classList.add('active');
+        }
+
+        function showApp() {
+            loginView.classList.add('hidden');
+            appView.classList.remove('hidden');
+            document.getElementById('current-user-display').textContent = sessionStorage.getItem('currentUser');
+            renderAll();
+            showView('dashboard');
+        }
+
+        function showLogin() {
+            appView.classList.add('hidden');
+            loginView.classList.remove('hidden');
+            sessionStorage.removeItem('currentUser');
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderAll() {
+            renderDashboard();
+            renderAnggaran();
+            renderSurat();
+            renderTugas();
+            renderDrafts();
+            renderTim();
+        }
+
+        function renderDashboard() {
+            const transactions = getData('transactions');
+            const letters = getData('letters');
+            const tasks = getData('tasks');
+
+            const totalPemasukan = transactions.filter(t => t.type === 'masuk').reduce((sum, t) => sum + t.amount, 0);
+            const totalPengeluaran = transactions.filter(t => t.type === 'keluar').reduce((sum, t) => sum + t.amount, 0);
+            document.getElementById('total-pemasukan').textContent = formatCurrency(totalPemasukan);
+            document.getElementById('total-pengeluaran').textContent = formatCurrency(totalPengeluaran);
+            document.getElementById('saldo-akhir').textContent = formatCurrency(totalPemasukan - totalPengeluaran);
+
+            const suratDiterima = letters.filter(p => p.type === 'Proposal' && (p.status === 'Diterima' || p.status === 'Sudah Cair')).length;
+            const suratMenunggu = letters.filter(p => p.type === 'Proposal' && p.status === 'Pengecekan').length;
+            document.getElementById('surat-total').textContent = `${letters.length} Surat`;
+            document.getElementById('surat-diterima').textContent = suratDiterima;
+            document.getElementById('surat-menunggu').textContent = suratMenunggu;
+            
+            const tugasSelesai = tasks.filter(t => t.status === 'Selesai').length;
+            const tugasProses = tasks.filter(t => t.status === 'Dalam Proses').length;
+            document.getElementById('tugas-total').textContent = `${tasks.length} Tugas`;
+            document.getElementById('tugas-selesai').textContent = tugasSelesai;
+            document.getElementById('tugas-proses').textContent = tugasProses;
+
+            // Render Timeline
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineContainer.innerHTML = '';
+            const upcomingTasks = tasks
+                .filter(t => t.status !== 'Selesai')
+                .sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+            
+            if (upcomingTasks.length === 0) {
+                timelineContainer.innerHTML = `<p class="text-gray-500">Tidak ada kegiatan terdekat.</p>`;
+            } else {
+                upcomingTasks.slice(0, 5).forEach(task => { // Show max 5 upcoming tasks
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center space-x-4';
+                    item.innerHTML = `
+                        <div class="flex flex-col items-center justify-center w-12 text-center">
+                            <span class="text-sm font-bold text-indigo-600">${new Date(task.due_date).getDate()}</span>
+                            <span class="text-xs text-gray-500">${new Date(task.due_date).toLocaleString('id-ID', { month: 'short' })}</span>
+                        </div>
+                        <div class="border-l-2 border-indigo-200 pl-4 py-1">
+                            <p class="font-semibold text-gray-800">${task.name}</p>
+                            <p class="text-sm text-gray-500">PIC: ${task.pic}</p>
+                        </div>
+                    `;
+                    timelineContainer.appendChild(item);
+                });
+            }
+        }
+
+        function renderAnggaran() {
+            const transactions = getData('transactions');
+            const pemasukanBody = document.getElementById('pemasukan-table-body');
+            const pengeluaranBody = document.getElementById('pengeluaran-table-body');
+            pemasukanBody.innerHTML = '';
+            pengeluaranBody.innerHTML = '';
+            let totalPemasukan = 0, totalPengeluaran = 0;
+
+            transactions.forEach(t => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                if (t.type === 'masuk') {
+                    totalPemasukan += t.amount;
+                    row.innerHTML = `<td class="px-4 py-3">${t.date}</td><td class="px-4 py-3">${t.category}</td><td class="px-4 py-3">${t.name}</td><td class="px-4 py-3 text-right font-medium text-blue-600">${formatCurrency(t.amount)}</td><td class="px-4 py-3 text-xs text-gray-500">${t.createdBy || ''}</td>`;
+                    pemasukanBody.appendChild(row);
+                } else {
+                    totalPengeluaran += t.amount;
+                    row.innerHTML = `<td class="px-4 py-3">${t.date}</td><td class="px-4 py-3">${t.name}</td><td class="px-4 py-3">${t.ref_number || '-'}</td><td class="px-4 py-3 text-right font-medium text-red-600">${formatCurrency(t.amount)}</td><td class="px-4 py-3 text-xs text-gray-500">${t.createdBy || ''}</td>`;
+                    pengeluaranBody.appendChild(row);
+                }
+            });
+            document.getElementById('pemasukan-total-display').textContent = formatCurrency(totalPemasukan);
+            document.getElementById('pengeluaran-total-display').textContent = formatCurrency(totalPengeluaran);
+        }
+        
+        function renderSurat() {
+            const letters = getData('letters');
+            const tableBody = document.getElementById('surat-table-body');
+            tableBody.innerHTML = '';
+            letters.forEach(l => {
+                const statusClass = `status-${l.status.toLowerCase().replace(/ /g, '-')}`;
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-4 py-3">${l.letter_number}</td>
+                    <td class="px-4 py-3">${l.type}</td>
+                    <td class="px-4 py-3">${l.destination}</td>
+                    <td class="px-4 py-3">${l.date}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button data-id="${l.id}" data-type="letter" class="status-badge ${statusClass} cursor-pointer hover:opacity-80">${l.status}</button>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-500">${l.createdBy || ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function renderTugas() {
+            const tasks = getData('tasks');
+            const tableBody = document.getElementById('tugas-table-body');
+            tableBody.innerHTML = '';
+            tasks.forEach(t => {
+                const statusClass = `status-${t.status.toLowerCase().replace(/ /g, '-')}`;
+                const textClass = t.status === 'Selesai' ? 'task-selesai' : '';
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-4 py-3 ${textClass}">${t.name}</td>
+                    <td class="px-4 py-3">${t.pic}</td>
+                    <td class="px-4 py-3">${t.due_date}</td>
+                    <td class="px-4 py-3 text-center">
+                         <button data-id="${t.id}" data-type="task" class="status-badge ${statusClass} cursor-pointer hover:opacity-80">${t.status}</button>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-500">${t.createdBy || ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function renderDrafts() {
+            const currentUser = sessionStorage.getItem('currentUser');
+            const uploadContainer = document.getElementById('upload-form-container');
+            
+            // Only show upload form to Sekretaris
+            if (currentUser === 'Citra Lestari') {
+                uploadContainer.classList.remove('hidden');
+            } else {
+                uploadContainer.classList.add('hidden');
+            }
+
+            const drafts = getData('drafts');
+            const tableBody = document.getElementById('draft-table-body');
+            tableBody.innerHTML = '';
+
+            if (drafts.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-500 py-4">Belum ada dokumen yang diunggah.</td></tr>`;
+                return;
+            }
+
+            drafts.forEach(d => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-medium">${d.filename}</td>
+                    <td class="px-4 py-3">${d.uploadDate}</td>
+                    <td class="px-4 py-3">${d.uploadedBy}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button data-id="${d.id}" data-type="draft-download" class="text-indigo-600 hover:text-indigo-900 font-semibold">Unduh</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function renderTim() {
+            const team = getData('team');
+            const container = document.getElementById('team-container');
+            container.innerHTML = '';
+
+            const divisions = team.reduce((acc, member) => {
+                acc[member.division] = acc[member.division] || [];
+                acc[member.division].push(member);
+                return acc;
+            }, {});
+
+            const divisionOrder = ['Inti', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Perlengkapan'];
+
+            divisionOrder.forEach(divisionName => {
+                if (divisions[divisionName]) {
+                    const divisionSection = document.createElement('div');
+                    divisionSection.className = 'mb-8';
+                    divisionSection.innerHTML = `<h2 class="text-2xl font-bold text-gray-700 border-b-2 border-indigo-500 pb-2 mb-4">${divisionName}</h2>`;
+                    
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6';
+
+                    divisions[divisionName].forEach(member => {
+                        const card = document.createElement('div');
+                        card.className = 'text-center';
+                        card.innerHTML = `
+                            <img src="${member.imageUrl}" alt="Foto ${member.name}" class="w-32 h-32 mx-auto rounded-full object-cover shadow-lg mb-2" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e0e0e0/ffffff?text=Error';">
+                            <h4 class="font-bold text-gray-800">${member.name}</h4>
+                            <p class="text-sm text-gray-500">${member.role}</p>
+                        `;
+                        grid.appendChild(card);
+                    });
+                    divisionSection.appendChild(grid);
+                    container.appendChild(divisionSection);
+                }
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const users = getData('users');
+            const user = users.find(u => u.username === e.target.username.value && u.password === e.target.password.value);
+            if (user) {
+                sessionStorage.setItem('currentUser', user.name);
+                showApp();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('logout-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            showLogin();
+        });
+
+        // Navigation
+        document.getElementById('nav-dashboard').addEventListener('click', () => showView('dashboard'));
+        document.getElementById('nav-anggaran').addEventListener('click', () => showView('anggaran'));
+        document.getElementById('nav-surat').addEventListener('click', () => showView('surat'));
+        document.getElementById('nav-tugas').addEventListener('click', () => showView('tugas'));
+        document.getElementById('nav-draft').addEventListener('click', () => showView('draft'));
+        document.getElementById('nav-tim').addEventListener('click', () => showView('tim'));
+        
+        mobileMenuButton.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) sidebar.classList.add('-translate-x-full');
+            });
+        });
+        
+        // Form Submissions
+        document.getElementById('pemasukan-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const transactions = getData('transactions');
+            transactions.push({ id: 'trx' + Date.now(), type: 'masuk', category: e.target.elements['pemasukan-jenis'].value, name: e.target.elements['pemasukan-nama'].value, amount: parseInt(e.target.elements['pemasukan-jumlah'].value), date: e.target.elements['pemasukan-tanggal'].value, createdBy: sessionStorage.getItem('currentUser') });
+            saveData('transactions', transactions);
+            renderAnggaran();
+            renderDashboard();
+            e.target.reset();
+        });
+        
+        document.getElementById('pengeluaran-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const transactions = getData('transactions');
+            transactions.push({ id: 'trx' + Date.now(), type: 'keluar', name: e.target.elements['pengeluaran-nama'].value, amount: parseInt(e.target.elements['pengeluaran-jumlah'].value), date: e.target.elements['pengeluaran-tanggal'].value, ref_number: e.target.elements['pengeluaran-ref'].value, createdBy: sessionStorage.getItem('currentUser') });
+            saveData('transactions', transactions);
+            renderAnggaran();
+            renderDashboard();
+            e.target.reset();
+        });
+        
+        document.getElementById('surat-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const letters = getData('letters');
+            const type = e.target.elements['surat-jenis'].value;
+            letters.push({
+                id: 'let' + Date.now(),
+                type: type,
+                letter_number: e.target.elements['surat-nomor'].value,
+                destination: e.target.elements['surat-tujuan'].value,
+                date: e.target.elements['surat-tanggal'].value,
+                status: type === 'Proposal' ? 'Pengecekan' : 'Terkirim',
+                createdBy: sessionStorage.getItem('currentUser')
+            });
+            saveData('letters', letters);
+            renderSurat();
+            renderDashboard();
+            e.target.reset();
+        });
+        
+        document.getElementById('tugas-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const tasks = getData('tasks');
+            tasks.push({ id: 'task' + Date.now(), name: e.target.elements['tugas-nama'].value, pic: e.target.elements['tugas-pic'].value, due_date: e.target.elements['tugas-target'].value, status: 'Belum Mulai', createdBy: sessionStorage.getItem('currentUser') });
+            saveData('tasks', tasks);
+            renderTugas();
+            renderDashboard();
+            e.target.reset();
+        });
+
+        document.getElementById('draft-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const fileInput = document.getElementById('draft-file');
+            const file = fileInput.files[0];
+            const uploadStatus = document.getElementById('upload-status');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const drafts = getData('drafts');
+                    const newDraft = {
+                        id: 'draft' + Date.now(),
+                        filename: file.name,
+                        filetype: file.type,
+                        uploadDate: new Date().toISOString().split('T')[0],
+                        uploadedBy: sessionStorage.getItem('currentUser'),
+                        dataUrl: event.target.result
+                    };
+                    drafts.push(newDraft);
+                    saveData('drafts', drafts);
+                    renderDrafts();
+                    e.target.reset();
+                    uploadStatus.textContent = 'File berhasil diunggah!';
+                    setTimeout(() => uploadStatus.textContent = '', 3000);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Modal Logic
+        const modal = document.getElementById('status-modal');
+        const modalSelect = document.getElementById('modal-status-select');
+        let currentItemToUpdate = null;
+
+        function openStatusModal(id, type) {
+            currentItemToUpdate = { id, type };
+            modalSelect.innerHTML = '';
+            let options = [], currentStatus;
+
+            if (type === 'letter') {
+                const letter = getData('letters').find(item => item.id === id);
+                options = letter.type === 'Proposal' 
+                    ? ['Pengecekan', 'Diterima', 'Ditolak', 'Sudah Cair'] 
+                    : ['Terkirim', 'Diterima', 'Ditolak'];
+                currentStatus = letter.status;
+            } else if (type === 'task') {
+                options = ['Belum Mulai', 'Dalam Proses', 'Selesai'];
+                currentStatus = getData('tasks').find(item => item.id === id).status;
+            }
+
+            options.forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt;
+                optionEl.textContent = opt;
+                if(opt === currentStatus) optionEl.selected = true;
+                modalSelect.appendChild(optionEl);
+            });
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeStatusModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentItemToUpdate = null;
+        }
+        
+        document.getElementById('modal-cancel-button').addEventListener('click', closeStatusModal);
+        
+        document.getElementById('modal-save-button').addEventListener('click', () => {
+            if (!currentItemToUpdate) return;
+            const { id, type } = currentItemToUpdate;
+            const newStatus = modalSelect.value;
+            const dataKey = type === 'letter' ? 'letters' : 'tasks';
+            const data = getData(dataKey);
+            const itemIndex = data.findIndex(item => item.id === id);
+            
+            if (itemIndex > -1) {
+                data[itemIndex].status = newStatus;
+                saveData(dataKey, data);
+                if (type === 'letter') renderSurat();
+                else renderTugas();
+                renderDashboard();
+            }
+            closeStatusModal();
+        });
+        
+        appView.addEventListener('click', (e) => {
+            const target = e.target.closest('button[data-id]');
+            if (target) {
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (type === 'draft-download') {
+                    const drafts = getData('drafts');
+                    const draftToDownload = drafts.find(d => d.id === id);
+                    if (draftToDownload) {
+                        const a = document.createElement('a');
+                        a.href = draftToDownload.dataUrl;
+                        a.download = draftToDownload.filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                } else {
+                    openStatusModal(id, type);
+                }
+            }
+        });
+
+        // --- ANTI-COPY & INSPECT ---
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', e => {
+            // Prevent F12
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+            // Prevent Ctrl+S, Ctrl+U, Ctrl+C
+            if (e.ctrlKey && ['s', 'u', 'c'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+            }
+        });
+
+        // --- INITIAL LOAD ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeData();
+            if (sessionStorage.getItem('currentUser')) {
+                 showApp();
+            } else {
+                 showLogin();
+            }
+        });
+
+    </script>
+</body>
+</html>
