@@ -207,11 +207,11 @@
                                     <div class="overflow-x-auto">
                                         <table class="w-full text-sm text-left text-gray-500">
                                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                                <tr><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Atas Nama</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3">Oleh</th></tr>
+                                                <tr><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Atas Nama</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3">Oleh</th><th class="px-4 py-3">Aksi</th></tr>
                                             </thead>
                                             <tbody id="pemasukan-table-body"></tbody>
                                             <tfoot>
-                                                <tr class="font-semibold text-gray-900"><th class="px-4 py-3 text-base" colspan="4">Total</th><td id="pemasukan-total-display" class="px-4 py-3 text-right">Rp 0</td></tr>
+                                                <tr class="font-semibold text-gray-900"><th class="px-4 py-3 text-base" colspan="2">Total</th><td id="pemasukan-total-display" class="px-4 py-3 text-right" colspan="3">Rp 0</td></tr>
                                             </tfoot>
                                         </table>
                                     </div>
@@ -246,11 +246,11 @@
                                     <div class="overflow-x-auto">
                                         <table class="w-full text-sm text-left text-gray-500">
                                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                                <tr><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Keperluan</th><th class="px-4 py-3">Ref</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3">Oleh</th></tr>
+                                                <tr><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Keperluan</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3">Oleh</th><th class="px-4 py-3">Aksi</th></tr>
                                             </thead>
                                             <tbody id="pengeluaran-table-body"></tbody>
                                             <tfoot>
-                                                <tr class="font-semibold text-gray-900"><th class="px-4 py-3 text-base" colspan="4">Total</th><td id="pengeluaran-total-display" class="px-4 py-3 text-right">Rp 0</td></tr>
+                                                <tr class="font-semibold text-gray-900"><th class="px-4 py-3 text-base" colspan="2">Total</th><td id="pengeluaran-total-display" class="px-4 py-3 text-right" colspan="3">Rp 0</td></tr>
                                             </tfoot>
                                         </table>
                                     </div>
@@ -399,6 +399,48 @@
         </div>
     </div>
 
+    <!-- Modal untuk Edit Anggaran -->
+    <div id="edit-anggaran-modal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-bold text-gray-800">Edit Transaksi</h3>
+            <form id="edit-anggaran-form" class="space-y-4 mt-4">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-type">
+                <div id="edit-pemasukan-fields">
+                    <div>
+                        <label for="edit-pemasukan-jenis" class="text-sm font-medium text-gray-700">Jenis Pemasukan</label>
+                        <select id="edit-pemasukan-jenis" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                            <option>Sponsor</option>
+                            <option>Donasi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit-pemasukan-nama" class="text-sm font-medium text-gray-700">Atas Nama</label>
+                        <input type="text" id="edit-pemasukan-nama" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                    </div>
+                </div>
+                <div id="edit-pengeluaran-fields">
+                     <div>
+                        <label for="edit-pengeluaran-nama" class="text-sm font-medium text-gray-700">Nama Barang/Keperluan</label>
+                        <input type="text" id="edit-pengeluaran-nama" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                    </div>
+                </div>
+                <div>
+                    <label for="edit-jumlah" class="text-sm font-medium text-gray-700">Jumlah (Rp)</label>
+                    <input type="number" id="edit-jumlah" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="edit-tanggal" class="text-sm font-medium text-gray-700">Tanggal</label>
+                    <input type="date" id="edit-tanggal" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="edit-anggaran-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <script type="module">
         // ===================================================================================
@@ -410,7 +452,8 @@
             { username: "panitia", password: "17anMerdeka2025", name: "Budi Santoso" },
             { username: "sekretaris1", password: "aman", name: "Zahid Abdullah" },
             { username: "sekretaris2", password: "aman", name: "Agung" },
-            { username: "bendahara", password: "uang", name: "Agus Wijaya" }
+            { username: "bendahara1", password: "uang", name: "Mba Putri" },
+            { username: "bendahara2", password: "uang", name: "Sabrina" },
         ];
 
         const initialTransactionsData = [
@@ -589,13 +632,19 @@
             transactions.forEach(t => {
                 const row = document.createElement('tr');
                 row.className = 'border-b';
+                const actionButtons = `
+                    <td class="px-4 py-3 text-center">
+                        <button data-id="${t.id}" data-type="transaction-edit" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button>
+                        <button data-id="${t.id}" data-type="transaction-delete" class="text-red-500 hover:text-red-700 text-xs font-semibold ml-2">Hapus</button>
+                    </td>`;
+
                 if (t.type === 'masuk') {
                     totalPemasukan += t.amount;
-                    row.innerHTML = `<td class="px-4 py-3">${t.date}</td><td class="px-4 py-3">${t.category}</td><td class="px-4 py-3">${t.name}</td><td class="px-4 py-3 text-right font-medium text-blue-600">${formatCurrency(t.amount)}</td><td class="px-4 py-3 text-xs text-gray-500">${t.createdBy || ''}</td>`;
+                    row.innerHTML = `<td class="px-4 py-3">${t.date}</td><td class="px-4 py-3">${t.name}</td><td class="px-4 py-3 text-right font-medium text-blue-600">${formatCurrency(t.amount)}</td><td class="px-4 py-3 text-xs text-gray-500">${t.createdBy || ''}</td>${actionButtons}`;
                     pemasukanBody.appendChild(row);
                 } else {
                     totalPengeluaran += t.amount;
-                    row.innerHTML = `<td class="px-4 py-3">${t.date}</td><td class="px-4 py-3">${t.name}</td><td class="px-4 py-3">${t.ref_number || '-'}</td><td class="px-4 py-3 text-right font-medium text-red-600">${formatCurrency(t.amount)}</td><td class="px-4 py-3 text-xs text-gray-500">${t.createdBy || ''}</td>`;
+                    row.innerHTML = `<td class="px-4 py-3">${t.date}</td><td class="px-4 py-3">${t.name}</td><td class="px-4 py-3 text-right font-medium text-red-600">${formatCurrency(t.amount)}</td><td class="px-4 py-3 text-xs text-gray-500">${t.createdBy || ''}</td>${actionButtons}`;
                     pengeluaranBody.appendChild(row);
                 }
             });
@@ -651,7 +700,6 @@
             const currentUser = localStorage.getItem('currentUser');
             const uploadContainer = document.getElementById('upload-form-container');
             
-            // Only show upload form to Sekretaris
             if (currentUser === 'Citra Lestari') {
                 uploadContainer.classList.remove('hidden');
             } else {
@@ -872,7 +920,7 @@
         });
 
         // Modal Logic
-        const modal = document.getElementById('status-modal');
+        const statusModal = document.getElementById('status-modal');
         const modalSelect = document.getElementById('modal-status-select');
         let currentItemToUpdate = null;
 
@@ -899,13 +947,13 @@
                 if(opt === currentStatus) optionEl.selected = true;
                 modalSelect.appendChild(optionEl);
             });
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            statusModal.classList.remove('hidden');
+            statusModal.classList.add('flex');
         }
 
         function closeStatusModal() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            statusModal.classList.add('hidden');
+            statusModal.classList.remove('flex');
             currentItemToUpdate = null;
         }
         
@@ -929,6 +977,65 @@
             closeStatusModal();
         });
         
+        // CRUD Anggaran Modals
+        const editAnggaranModal = document.getElementById('edit-anggaran-modal');
+        const editAnggaranForm = document.getElementById('edit-anggaran-form');
+
+        function openEditAnggaranModal(id) {
+            const transactions = getData('transactions');
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            document.getElementById('edit-id').value = trx.id;
+            document.getElementById('edit-type').value = trx.type;
+            document.getElementById('edit-jumlah').value = trx.amount;
+            document.getElementById('edit-tanggal').value = trx.date;
+
+            if (trx.type === 'masuk') {
+                document.getElementById('edit-pemasukan-fields').style.display = 'block';
+                document.getElementById('edit-pengeluaran-fields').style.display = 'none';
+                document.getElementById('edit-pemasukan-jenis').value = trx.category;
+                document.getElementById('edit-pemasukan-nama').value = trx.name;
+            } else {
+                document.getElementById('edit-pemasukan-fields').style.display = 'none';
+                document.getElementById('edit-pengeluaran-fields').style.display = 'block';
+                document.getElementById('edit-pengeluaran-nama').value = trx.name;
+            }
+            editAnggaranModal.classList.remove('hidden');
+            editAnggaranModal.classList.add('flex');
+        }
+
+        function closeEditAnggaranModal() {
+            editAnggaranModal.classList.add('hidden');
+            editAnggaranModal.classList.remove('flex');
+        }
+        
+        document.getElementById('edit-anggaran-cancel').addEventListener('click', closeEditAnggaranModal);
+
+        editAnggaranForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const type = document.getElementById('edit-type').value;
+            let transactions = getData('transactions');
+            const trxIndex = transactions.findIndex(t => t.id === id);
+            
+            if (trxIndex > -1) {
+                transactions[trxIndex].amount = parseInt(document.getElementById('edit-jumlah').value);
+                transactions[trxIndex].date = document.getElementById('edit-tanggal').value;
+                if (type === 'masuk') {
+                    transactions[trxIndex].category = document.getElementById('edit-pemasukan-jenis').value;
+                    transactions[trxIndex].name = document.getElementById('edit-pemasukan-nama').value;
+                } else {
+                    transactions[trxIndex].name = document.getElementById('edit-pengeluaran-nama').value;
+                }
+            }
+            saveData('transactions', transactions);
+            renderAnggaran();
+            renderDashboard();
+            closeEditAnggaranModal();
+        });
+
+
         appView.addEventListener('click', (e) => {
             const target = e.target.closest('button[data-id]');
             if (target) {
@@ -944,6 +1051,16 @@
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
+                    }
+                } else if (type === 'transaction-edit') {
+                    openEditAnggaranModal(id);
+                } else if (type === 'transaction-delete') {
+                    if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+                        let transactions = getData('transactions');
+                        transactions = transactions.filter(t => t.id !== id);
+                        saveData('transactions', transactions);
+                        renderAnggaran();
+                        renderDashboard();
                     }
                 } else {
                     openStatusModal(id, type);
