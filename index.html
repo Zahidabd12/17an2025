@@ -38,21 +38,40 @@
         .status-dalam-proses { background-color: #dbeafe; color: #2563eb; }
         .status-selesai { background-color: #dcfce7; color: #16a34a; }
         .task-selesai { text-decoration: line-through; color: #6b7280; }
+
+        /* Loading Spinner */
+        #loading-overlay {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        .spinner {
+            border-top-color: #4f46e5;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center">
+        <div class="spinner h-16 w-16 animate-spin rounded-full border-4 border-t-4 border-gray-200"></div>
+        <p class="mt-4 text-gray-600 font-semibold">Menghubungkan ke server real-time...</p>
+    </div>
+
     <!-- Halaman Login -->
-    <div id="login-view" class="flex items-center justify-center min-h-screen p-4">
+    <div id="login-view" class="hidden flex items-center justify-center min-h-screen p-4">
         <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
             <div class="text-center">
                  <h1 class="text-2xl font-bold text-gray-800">Login Panitia</h1>
-                 <p class="text-sm text-gray-500 mt-1">Selamat Datang!</p>
+                 <p class="text-sm text-gray-500 mt-1">Gunakan email dan password panitia.</p>
             </div>
             <form id="login-form" class="space-y-6">
                 <div>
-                    <label for="username" class="text-sm font-medium text-gray-700">Username</label>
-                    <input id="username" name="username" type="text" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="panitia">
+                    <label for="email" class="text-sm font-medium text-gray-700">Email</label>
+                    <input id="email" name="email" type="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="panitia@demo.com">
                 </div>
                 <div>
                     <label for="password" class="text-sm font-medium text-gray-700">Password</label>
@@ -60,11 +79,11 @@
                 </div>
                  <!--<div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-md">
                     <p class="font-semibold text-gray-600">Akun untuk testing:</p>
-                    <p><strong>Username:</strong> panitia | <strong>Password:</strong> 17anMerdeka2025</p>
-                    <p><strong>Username:</strong> sekretaris | <strong>Password:</strong> aman</p>
-                    <p><strong>Username:</strong> bendahara | <strong>Password:</strong> uang</p>
+                    <p><strong>Email:</strong> panitia@demo.com | <strong>Pass:</strong> 17anMerdeka2025</p>
+                    <p><strong>Email:</strong> sekretaris@demo.com | <strong>Pass:</strong> aman</p>
+                    <p><strong>Email:</strong> bendahara@demo.com | <strong>Pass:</strong> uang</p>
                 </div>-->
-                <p id="login-error" class="text-sm text-red-600 hidden">Username atau password salah.</p>
+                <p id="login-error" class="text-sm text-red-600 hidden"></p>
                 <button type="submit" class="w-full py-2 px-4 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Login
                 </button>
@@ -72,7 +91,7 @@
         </div>
     </div>
 
-    <!-- Tampilan Aplikasi Utama (setelah login) -->
+    <!-- Tampilan Aplikasi Utama -->
     <div id="app-view" class="hidden">
         <div class="relative min-h-screen md:flex">
             <!-- Sidebar -->
@@ -444,84 +463,77 @@
 
     <script type="module">
         // ===================================================================================
-        // DATA LAYER - SIMULASI FILE JSON TERPISAH
-        // Data awal untuk aplikasi. Dalam production, ini idealnya diambil dari server.
+        // FIREBASE SETUP
         // ===================================================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
-        const initialUsersData = [
-            { username: "panitia", password: "17anMerdeka2025", name: "Budi Santoso" },
-            { username: "sekretaris1", password: "aman", name: "Zahid Abdullah" },
-            { username: "sekretaris2", password: "aman", name: "Agung" },
-            { username: "bendahara1", password: "uang", name: "Mba Putri" },
-            { username: "bendahara2", password: "uang", name: "Sabrina" },
-        ];
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhSSsLxdlcBu1_t__MDT-gL-GFflLDsoo",
+            authDomain: "dashboard-panitia-17an.firebaseapp.com",
+            projectId: "dashboard-panitia-17an",
+            storageBucket: "dashboard-panitia-17an.appspot.com",
+            messagingSenderId: "562440415779",
+            appId: "1:562440415779:web:f7bf0c5faee0e827db1f96",
+            measurementId: "G-9W2GC2M9VR"
+        };
 
-        const initialTransactionsData = [
-            { id: "trx001", type: "masuk", category: "Sponsor", name: "PT. Maju Mundur", amount: 2000000, date: "2025-07-15", createdBy: "Agus Wijaya" },
-            { id: "trx002", type: "keluar", name: "Beli Cat untuk Gapura", amount: 350000, date: "2025-07-16", ref_number: "KWT-001", createdBy: "Agus Wijaya" }
-        ];
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
 
-        const initialLettersData = [
-            { id: "let001", type: "Proposal", letter_number: "001/PROP/PAN-17/VII/2025", destination: "Kantor Kelurahan", date: "2025-07-10", status: "Diterima", createdBy: "Citra Lestari" },
-            { id: "let002", type: "Proposal", letter_number: "002/PROP/PAN-17/VII/2025", destination: "CV. Sumber Rezeki", date: "2025-07-11", status: "Sudah Cair", createdBy: "Citra Lestari" },
-            { id: "let003", type: "Undangan", letter_number: "001/UND/PAN-17/VII/2025", destination: "Bapak Ketua RW 05", date: "2025-07-20", status: "Terkirim", createdBy: "Citra Lestari" }
-        ];
+        // ===================================================================================
+        // DATA SEEDING (RUNS ONLY ONCE IF DATA IS EMPTY)
+        // ===================================================================================
+        async function seedInitialData() {
+            const collectionsToSeed = {
+                users: [
+                    { email: "panitia@demo.com", name: "Yoga", role: "Ketua" },
+                    { email: "sekretaris@demo.com", name: "Zahid Abdullah", role: "Sekretaris" },
+                    { email: "bendahara@demo.com", name: "Putri", role: "Bendahara" }
+                ],
+                team: [
+                    { id: "team01", name: "Budi Santoso", role: "Ketua Pelaksana", division: "Inti", imageUrl: "https://placehold.co/400x400/6366f1/ffffff?text=BS" },
+                    { id: "team02", name: "Zahid Abdullah", role: "Sekretaris", division: "Inti", imageUrl: "https://placehold.co/400x400/ec4899/ffffff?text=CL" },
+                    { id: "team03", name: "Agus Wijaya", role: "Bendahara", division: "Inti", imageUrl: "https://placehold.co/400x400/84cc16/ffffff?text=AW" },
+                    { id: "team04", name: "Dewi Anggraini", role: "Koordinator", division: "Seksi Acara", imageUrl: "https://placehold.co/400x400/f97316/ffffff?text=DA" },
+                    { id: "team05", name: "Eko Prasetyo", role: "Anggota", division: "Seksi Acara", imageUrl: "https://placehold.co/400x400/f97316/ffffff?text=EP" },
+                    { id: "team06", name: "Fitriani", role: "Koordinator", division: "Seksi Konsumsi", imageUrl: "https://placehold.co/400x400/14b8a6/ffffff?text=F" },
+                    { id: "team07", name: "Gunawan", role: "Koordinator", division: "Seksi Perlengkapan", imageUrl: "https://placehold.co/400x400/a855f7/ffffff?text=G" },
+                ]
+            };
 
-        const initialTasksData = [
-            { id: "task001", name: "Menyebar Undangan Lomba Anak", pic: "Seksi Acara", due_date: "2025-08-01", status: "Selesai", createdBy: "Budi Santoso" },
-            { id: "task002", name: "Booking Sound System", pic: "Seksi Perlengkapan", due_date: "2025-07-30", status: "Dalam Proses", createdBy: "Budi Santoso" },
-            { id: "task003", name: "Rapat Final Panitia", pic: "Ketua Panitia", due_date: "2025-08-10", status: "Belum Mulai", createdBy: "Budi Santoso" },
-            { id: "task004", name: "Persiapan Lapangan", pic: "Seksi Perlengkapan", due_date: "2025-08-16", status: "Belum Mulai", createdBy: "Budi Santoso" }
-        ];
+            for (const colName in collectionsToSeed) {
+                const colRef = collection(db, colName);
+                const snapshot = await getDocs(query(colRef));
+                if (snapshot.empty) {
+                    console.log(`Seeding collection: ${colName}`);
+                    const batch = writeBatch(db);
+                    collectionsToSeed[colName].forEach(data => {
+                        const docRef = doc(colRef);
+                        batch.set(docRef, data);
+                    });
+                    await batch.commit();
+                }
+            }
+        }
 
-        const initialTeamData = [
-            { id: "team01", name: "Budi Santoso", role: "Ketua Pelaksana", division: "Inti", imageUrl: "https://placehold.co/400x400/6366f1/ffffff?text=BS" },
-            { id: "team02", name: "Citra Lestari", role: "Sekretaris", division: "Inti", imageUrl: "https://placehold.co/400x400/ec4899/ffffff?text=CL" },
-            { id: "team03", name: "Agus Wijaya", role: "Bendahara", division: "Inti", imageUrl: "https://placehold.co/400x400/84cc16/ffffff?text=AW" },
-            { id: "team04", name: "Dewi Anggraini", role: "Koordinator", division: "Seksi Acara", imageUrl: "https://placehold.co/400x400/f97316/ffffff?text=DA" },
-            { id: "team05", name: "Eko Prasetyo", role: "Anggota", division: "Seksi Acara", imageUrl: "https://placehold.co/400x400/f97316/ffffff?text=EP" },
-            { id: "team06", name: "Fitriani", role: "Koordinator", division: "Seksi Konsumsi", imageUrl: "https://placehold.co/400x400/14b8a6/ffffff?text=F" },
-            { id: "team07", name: "Gunawan", role: "Koordinator", division: "Seksi Perlengkapan", imageUrl: "https://placehold.co/400x400/a855f7/ffffff?text=G" },
-        ];
 
         // ===================================================================================
         // APPLICATION LOGIC
         // ===================================================================================
-
-        function initializeData() {
-            if (!localStorage.getItem('users')) {
-                localStorage.setItem('users', JSON.stringify(initialUsersData));
-            }
-            if (!localStorage.getItem('transactions')) {
-                localStorage.setItem('transactions', JSON.stringify(initialTransactionsData));
-            }
-            if (!localStorage.getItem('letters')) {
-                localStorage.setItem('letters', JSON.stringify(initialLettersData));
-            }
-            if (!localStorage.getItem('tasks')) {
-                localStorage.setItem('tasks', JSON.stringify(initialTasksData));
-            }
-            if (!localStorage.getItem('team')) {
-                localStorage.setItem('team', JSON.stringify(initialTeamData));
-            }
-             if (!localStorage.getItem('drafts')) {
-                localStorage.setItem('drafts', JSON.stringify([]));
-            }
-        }
-
-        function getData(key) {
-            return JSON.parse(localStorage.getItem(key)) || [];
-        }
-
-        function saveData(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
-        }
         
         const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-
+        
         // --- UI & VIEW MANAGEMENT ---
         const loginView = document.getElementById('login-view');
         const appView = document.getElementById('app-view');
+        const loadingOverlay = document.getElementById('loading-overlay');
         const sidebar = document.getElementById('sidebar');
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const contentDivs = {
@@ -546,35 +558,35 @@
             }
         }
 
-        function showApp() {
+        async function showApp(user) {
             loginView.classList.add('hidden');
             appView.classList.remove('hidden');
-            document.getElementById('current-user-display').textContent = localStorage.getItem('currentUser');
-            renderAll();
+            
+            // Fetch user profile from Firestore
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("email", "==", user.email));
+            const querySnapshot = await getDocs(q);
+            let userProfile = { name: user.email, role: 'Panitia' };
+            if (!querySnapshot.empty) {
+                userProfile = querySnapshot.docs[0].data();
+            }
+            
+            window.currentUserProfile = userProfile;
+            document.getElementById('current-user-display').textContent = userProfile.name;
+            
+            listenToData();
             showView('dashboard');
         }
 
         function showLogin() {
             appView.classList.add('hidden');
             loginView.classList.remove('hidden');
-            localStorage.removeItem('currentUser');
+            loadingOverlay.classList.add('hidden');
+            window.currentUserProfile = null;
         }
 
-        // --- RENDER FUNCTIONS ---
-        function renderAll() {
-            renderDashboard();
-            renderAnggaran();
-            renderSurat();
-            renderTugas();
-            renderDrafts();
-            renderTim();
-        }
-
-        function renderDashboard() {
-            const transactions = getData('transactions');
-            const letters = getData('letters');
-            const tasks = getData('tasks');
-
+        // --- RENDER FUNCTIONS (now take data as parameter) ---
+        function renderDashboard(transactions, letters, tasks) {
             const totalPemasukan = transactions.filter(t => t.type === 'masuk').reduce((sum, t) => sum + t.amount, 0);
             const totalPengeluaran = transactions.filter(t => t.type === 'keluar').reduce((sum, t) => sum + t.amount, 0);
             document.getElementById('total-pemasukan').textContent = formatCurrency(totalPemasukan);
@@ -603,7 +615,7 @@
             if (upcomingTasks.length === 0) {
                 timelineContainer.innerHTML = `<p class="text-gray-500">Tidak ada kegiatan terdekat.</p>`;
             } else {
-                upcomingTasks.slice(0, 5).forEach(task => { // Show max 5 upcoming tasks
+                upcomingTasks.slice(0, 5).forEach(task => {
                     const item = document.createElement('div');
                     item.className = 'flex items-center space-x-4';
                     item.innerHTML = `
@@ -621,8 +633,7 @@
             }
         }
 
-        function renderAnggaran() {
-            const transactions = getData('transactions');
+        function renderAnggaran(transactions) {
             const pemasukanBody = document.getElementById('pemasukan-table-body');
             const pengeluaranBody = document.getElementById('pengeluaran-table-body');
             pemasukanBody.innerHTML = '';
@@ -652,8 +663,7 @@
             document.getElementById('pengeluaran-total-display').textContent = formatCurrency(totalPengeluaran);
         }
         
-        function renderSurat() {
-            const letters = getData('letters');
+        function renderSurat(letters) {
             const tableBody = document.getElementById('surat-table-body');
             tableBody.innerHTML = '';
             letters.forEach(l => {
@@ -674,8 +684,7 @@
             });
         }
         
-        function renderTugas() {
-            const tasks = getData('tasks');
+        function renderTugas(tasks) {
             const tableBody = document.getElementById('tugas-table-body');
             tableBody.innerHTML = '';
             tasks.forEach(t => {
@@ -696,17 +705,15 @@
             });
         }
 
-        function renderDrafts() {
-            const currentUser = localStorage.getItem('currentUser');
+        function renderDrafts(drafts) {
             const uploadContainer = document.getElementById('upload-form-container');
             
-            if (currentUser === 'Citra Lestari') {
+            if (window.currentUserProfile && window.currentUserProfile.role === 'Sekretaris') {
                 uploadContainer.classList.remove('hidden');
             } else {
                 uploadContainer.classList.add('hidden');
             }
 
-            const drafts = getData('drafts');
             const tableBody = document.getElementById('draft-table-body');
             tableBody.innerHTML = '';
 
@@ -723,15 +730,14 @@
                     <td class="px-4 py-3">${d.uploadDate}</td>
                     <td class="px-4 py-3">${d.uploadedBy}</td>
                     <td class="px-4 py-3 text-center">
-                        <button data-id="${d.id}" data-type="draft-download" class="text-indigo-600 hover:text-indigo-900 font-semibold">Unduh</button>
+                        <a href="${d.downloadURL}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-900 font-semibold">Unduh</a>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
-        function renderTim() {
-            const team = getData('team');
+        function renderTim(team) {
             const container = document.getElementById('team-container');
             container.innerHTML = '';
 
@@ -780,16 +786,22 @@
             return str;
         }
 
-        function generateLetterNumber() {
+        async function generateLetterNumber() {
             const type = document.getElementById('surat-jenis').value;
-            const letters = getData('letters');
             const typeCode = type === 'Proposal' ? 'PROP' : 'UND';
             
-            const sameTypeLetters = letters.filter(l => l.type === type);
-            const lastNumber = sameTypeLetters.reduce((max, l) => {
-                const numPart = parseInt(l.letter_number.split('/')[0], 10);
-                return numPart > max ? numPart : max;
-            }, 0);
+            const lettersRef = collection(db, "letters");
+            const q = query(lettersRef, where("type", "==", type));
+            const querySnapshot = await getDocs(q);
+            
+            let lastNumber = 0;
+            querySnapshot.forEach((doc) => {
+                const letter = doc.data();
+                const numPart = parseInt(letter.letter_number.split('/')[0], 10);
+                if (numPart > lastNumber) {
+                    lastNumber = numPart;
+                }
+            });
 
             const nextNumber = String(lastNumber + 1).padStart(3, '0');
             
@@ -807,19 +819,21 @@
         // --- EVENT LISTENERS ---
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const users = getData('users');
-            const user = users.find(u => u.username === e.target.username.value && u.password === e.target.password.value);
-            if (user) {
-                localStorage.setItem('currentUser', user.name);
-                showApp();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+            const loginError = document.getElementById('login-error');
+            
+            signInWithEmailAndPassword(auth, email, password)
+                .catch((error) => {
+                    console.error("Login error:", error);
+                    loginError.textContent = "Email atau password salah.";
+                    loginError.classList.remove('hidden');
+                });
         });
 
         document.getElementById('logout-button').addEventListener('click', (e) => {
             e.preventDefault();
-            showLogin();
+            signOut(auth);
         });
 
         // Navigation
@@ -838,84 +852,96 @@
         });
         
         // Form Submissions
-        document.getElementById('pemasukan-form').addEventListener('submit', e => {
+        document.getElementById('pemasukan-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const transactions = getData('transactions');
-            transactions.push({ id: 'trx' + Date.now(), type: 'masuk', category: e.target.elements['pemasukan-jenis'].value, name: e.target.elements['pemasukan-nama'].value, amount: parseInt(e.target.elements['pemasukan-jumlah'].value), date: e.target.elements['pemasukan-tanggal'].value, createdBy: localStorage.getItem('currentUser') });
-            saveData('transactions', transactions);
-            renderAnggaran();
-            renderDashboard();
+            const newTransaction = {
+                type: 'masuk',
+                category: e.target.elements['pemasukan-jenis'].value,
+                name: e.target.elements['pemasukan-nama'].value,
+                amount: parseInt(e.target.elements['pemasukan-jumlah'].value),
+                date: e.target.elements['pemasukan-tanggal'].value,
+                createdBy: window.currentUserProfile.name,
+                createdAt: serverTimestamp()
+            };
+            await addDoc(collection(db, "transactions"), newTransaction);
             e.target.reset();
         });
         
-        document.getElementById('pengeluaran-form').addEventListener('submit', e => {
+        document.getElementById('pengeluaran-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const transactions = getData('transactions');
-            transactions.push({ id: 'trx' + Date.now(), type: 'keluar', name: e.target.elements['pengeluaran-nama'].value, amount: parseInt(e.target.elements['pengeluaran-jumlah'].value), date: e.target.elements['pengeluaran-tanggal'].value, ref_number: e.target.elements['pengeluaran-ref'].value, createdBy: localStorage.getItem('currentUser') });
-            saveData('transactions', transactions);
-            renderAnggaran();
-            renderDashboard();
+            const newTransaction = {
+                type: 'keluar',
+                name: e.target.elements['pengeluaran-nama'].value,
+                amount: parseInt(e.target.elements['pengeluaran-jumlah'].value),
+                date: e.target.elements['pengeluaran-tanggal'].value,
+                ref_number: e.target.elements['pengeluaran-ref'].value,
+                createdBy: window.currentUserProfile.name,
+                createdAt: serverTimestamp()
+            };
+            await addDoc(collection(db, "transactions"), newTransaction);
             e.target.reset();
         });
         
         document.getElementById('surat-jenis').addEventListener('change', generateLetterNumber);
 
-        document.getElementById('surat-form').addEventListener('submit', e => {
+        document.getElementById('surat-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const letters = getData('letters');
-            const type = e.target.elements['surat-jenis'].value;
-            letters.push({
-                id: 'let' + Date.now(),
-                type: type,
+            const newLetter = {
+                type: e.target.elements['surat-jenis'].value,
                 letter_number: e.target.elements['surat-nomor'].value,
                 destination: e.target.elements['surat-tujuan'].value,
                 date: e.target.elements['surat-tanggal'].value,
-                status: type === 'Proposal' ? 'Pengecekan' : 'Terkirim',
-                createdBy: localStorage.getItem('currentUser')
-            });
-            saveData('letters', letters);
-            renderSurat();
-            renderDashboard();
+                status: e.target.elements['surat-jenis'].value === 'Proposal' ? 'Pengecekan' : 'Terkirim',
+                createdBy: window.currentUserProfile.name,
+                createdAt: serverTimestamp()
+            };
+            await addDoc(collection(db, "letters"), newLetter);
             e.target.reset();
-            generateLetterNumber(); // Regenerate for the next entry
+            generateLetterNumber();
         });
         
-        document.getElementById('tugas-form').addEventListener('submit', e => {
+        document.getElementById('tugas-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const tasks = getData('tasks');
-            tasks.push({ id: 'task' + Date.now(), name: e.target.elements['tugas-nama'].value, pic: e.target.elements['tugas-pic'].value, due_date: e.target.elements['tugas-target'].value, status: 'Belum Mulai', createdBy: localStorage.getItem('currentUser') });
-            saveData('tasks', tasks);
-            renderTugas();
-            renderDashboard();
+            const newTask = {
+                name: e.target.elements['tugas-nama'].value,
+                pic: e.target.elements['tugas-pic'].value,
+                due_date: e.target.elements['tugas-target'].value,
+                status: 'Belum Mulai',
+                createdBy: window.currentUserProfile.name,
+                createdAt: serverTimestamp()
+            };
+            await addDoc(collection(db, "tasks"), newTask);
             e.target.reset();
         });
 
-        document.getElementById('draft-form').addEventListener('submit', e => {
+        document.getElementById('draft-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fileInput = document.getElementById('draft-file');
             const file = fileInput.files[0];
             const uploadStatus = document.getElementById('upload-status');
             
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const drafts = getData('drafts');
-                    const newDraft = {
-                        id: 'draft' + Date.now(),
+                uploadStatus.textContent = 'Mengunggah file...';
+                const storageRef = ref(storage, `drafts/${Date.now()}_${file.name}`);
+                try {
+                    const snapshot = await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(snapshot.ref);
+                    
+                    await addDoc(collection(db, "drafts"), {
                         filename: file.name,
-                        filetype: file.type,
                         uploadDate: new Date().toISOString().split('T')[0],
-                        uploadedBy: localStorage.getItem('currentUser'),
-                        dataUrl: event.target.result
-                    };
-                    drafts.push(newDraft);
-                    saveData('drafts', drafts);
-                    renderDrafts();
-                    e.target.reset();
+                        uploadedBy: window.currentUserProfile.name,
+                        downloadURL: downloadURL,
+                        createdAt: serverTimestamp()
+                    });
+
                     uploadStatus.textContent = 'File berhasil diunggah!';
+                    e.target.reset();
                     setTimeout(() => uploadStatus.textContent = '', 3000);
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error("Upload error:", error);
+                    uploadStatus.textContent = 'Gagal mengunggah file.';
+                }
             }
         });
 
@@ -928,16 +954,17 @@
             currentItemToUpdate = { id, type };
             modalSelect.innerHTML = '';
             let options = [], currentStatus;
+            const dataKey = type === 'letter' ? 'letters' : 'tasks';
+            const data = window.appData[dataKey].find(item => item.id === id);
 
             if (type === 'letter') {
-                const letter = getData('letters').find(item => item.id === id);
-                options = letter.type === 'Proposal' 
+                options = data.type === 'Proposal' 
                     ? ['Pengecekan', 'Diterima', 'Ditolak', 'Sudah Cair'] 
                     : ['Terkirim', 'Diterima', 'Ditolak'];
-                currentStatus = letter.status;
+                currentStatus = data.status;
             } else if (type === 'task') {
                 options = ['Belum Mulai', 'Dalam Proses', 'Selesai'];
-                currentStatus = getData('tasks').find(item => item.id === id).status;
+                currentStatus = data.status;
             }
 
             options.forEach(opt => {
@@ -959,21 +986,13 @@
         
         document.getElementById('modal-cancel-button').addEventListener('click', closeStatusModal);
         
-        document.getElementById('modal-save-button').addEventListener('click', () => {
+        document.getElementById('modal-save-button').addEventListener('click', async () => {
             if (!currentItemToUpdate) return;
             const { id, type } = currentItemToUpdate;
             const newStatus = modalSelect.value;
             const dataKey = type === 'letter' ? 'letters' : 'tasks';
-            const data = getData(dataKey);
-            const itemIndex = data.findIndex(item => item.id === id);
-            
-            if (itemIndex > -1) {
-                data[itemIndex].status = newStatus;
-                saveData(dataKey, data);
-                if (type === 'letter') renderSurat();
-                else renderTugas();
-                renderDashboard();
-            }
+            const docRef = doc(db, dataKey, id);
+            await updateDoc(docRef, { status: newStatus });
             closeStatusModal();
         });
         
@@ -982,8 +1001,7 @@
         const editAnggaranForm = document.getElementById('edit-anggaran-form');
 
         function openEditAnggaranModal(id) {
-            const transactions = getData('transactions');
-            const trx = transactions.find(t => t.id === id);
+            const trx = window.appData.transactions.find(t => t.id === id);
             if (!trx) return;
 
             document.getElementById('edit-id').value = trx.id;
@@ -1012,55 +1030,38 @@
         
         document.getElementById('edit-anggaran-cancel').addEventListener('click', closeEditAnggaranModal);
 
-        editAnggaranForm.addEventListener('submit', e => {
+        editAnggaranForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('edit-id').value;
             const type = document.getElementById('edit-type').value;
-            let transactions = getData('transactions');
-            const trxIndex = transactions.findIndex(t => t.id === id);
+            const docRef = doc(db, "transactions", id);
             
-            if (trxIndex > -1) {
-                transactions[trxIndex].amount = parseInt(document.getElementById('edit-jumlah').value);
-                transactions[trxIndex].date = document.getElementById('edit-tanggal').value;
-                if (type === 'masuk') {
-                    transactions[trxIndex].category = document.getElementById('edit-pemasukan-jenis').value;
-                    transactions[trxIndex].name = document.getElementById('edit-pemasukan-nama').value;
-                } else {
-                    transactions[trxIndex].name = document.getElementById('edit-pengeluaran-nama').value;
-                }
+            const updatedData = {
+                amount: parseInt(document.getElementById('edit-jumlah').value),
+                date: document.getElementById('edit-tanggal').value
+            };
+
+            if (type === 'masuk') {
+                updatedData.category = document.getElementById('edit-pemasukan-jenis').value;
+                updatedData.name = document.getElementById('edit-pemasukan-nama').value;
+            } else {
+                updatedData.name = document.getElementById('edit-pengeluaran-nama').value;
             }
-            saveData('transactions', transactions);
-            renderAnggaran();
-            renderDashboard();
+            await updateDoc(docRef, updatedData);
             closeEditAnggaranModal();
         });
 
 
-        appView.addEventListener('click', (e) => {
+        appView.addEventListener('click', async (e) => {
             const target = e.target.closest('button[data-id]');
             if (target) {
                 const type = target.dataset.type;
                 const id = target.dataset.id;
-                if (type === 'draft-download') {
-                    const drafts = getData('drafts');
-                    const draftToDownload = drafts.find(d => d.id === id);
-                    if (draftToDownload) {
-                        const a = document.createElement('a');
-                        a.href = draftToDownload.dataUrl;
-                        a.download = draftToDownload.filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    }
-                } else if (type === 'transaction-edit') {
+                if (type === 'transaction-edit') {
                     openEditAnggaranModal(id);
                 } else if (type === 'transaction-delete') {
                     if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-                        let transactions = getData('transactions');
-                        transactions = transactions.filter(t => t.id !== id);
-                        saveData('transactions', transactions);
-                        renderAnggaran();
-                        renderDashboard();
+                        await deleteDoc(doc(db, "transactions", id));
                     }
                 } else {
                     openStatusModal(id, type);
@@ -1068,28 +1069,58 @@
             }
         });
 
-        // --- ANTI-COPY & INSPECT ---
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', e => {
-            // Prevent F12
-            if (e.key === 'F12') {
-                e.preventDefault();
+        // --- REALTIME DATA LISTENER ---
+        
+        window.appData = { transactions: [], letters: [], tasks: [], drafts: [], team: [] };
+        let unsubscribes = [];
+
+        function listenToData() {
+            // Hentikan listener lama jika ada
+            unsubscribes.forEach(unsub => unsub());
+            unsubscribes = [];
+
+            const collections = ['transactions', 'letters', 'tasks', 'drafts', 'team'];
+            collections.forEach(colName => {
+                const q = query(collection(db, colName));
+                const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                    window.appData[colName] = [];
+                    querySnapshot.forEach((doc) => {
+                        window.appData[colName].push({ id: doc.id, ...doc.data() });
+                    });
+                    // Re-render all components that depend on this data
+                    renderDashboard(window.appData.transactions, window.appData.letters, window.appData.tasks);
+                    renderAnggaran(window.appData.transactions);
+                    renderSurat(window.appData.letters);
+                    renderTugas(window.appData.tasks);
+                    renderDrafts(window.appData.drafts);
+                    renderTim(window.appData.team);
+                });
+                unsubscribes.push(unsubscribe);
+            });
+        }
+
+        // --- INITIAL LOAD & AUTH STATE CHANGE ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await seedInitialData(); 
+                await showApp(user);
+            } else {
+                showLogin();
             }
-            // Prevent Ctrl+S, Ctrl+U, Ctrl+C
-            if (e.ctrlKey && ['s', 'u', 'c'].includes(e.key.toLowerCase())) {
-                e.preventDefault();
-            }
+            loadingOverlay.classList.add('hidden');
         });
 
-        // --- INITIAL LOAD ---
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeData();
-            if (localStorage.getItem('currentUser')) {
-                 showApp();
-            } else {
-                 showLogin();
+        // --- ANTI-COPY & INSPECT ---
+        setInterval(() => {
+            const threshold = 160;
+            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+            if (widthThreshold || heightThreshold) {
+                document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;font-size:1.5rem;color:red;text-align:center;padding:20px;">Akses ditolak: Developer Tools terdeteksi aktif.<br>Harap tutup Developer Tools dan refresh halaman.</div>';
             }
-        });
+        }, 1000);
+        document.addEventListener('contextmenu', event => event.preventDefault());
 
     </script>
 </body>
